@@ -1,0 +1,109 @@
+/* Variant C — Pixel Dojo. Famicom palette, chunky bordered windows. */
+.pixel-root{
+  --ink:#2c2018;
+  --ink-2:#5a4632;
+  --cream:#f3e4c3;
+  --cream-2:#e7d2a6;
+  --wall:#caa477;
+  --wall-2:#b88f5e;
+  --tatami:#8fae6b;
+  --tatami-2:#7e9d5c;
+  --red:#cf4b3a;
+  --gold:#e8b24a;
+  --blue:#3b6ea5;
+  --yellow:#ffd34d;
+  --shadow:#1c140e;
+  width:100%;height:100%;position:relative;overflow:hidden;
+  font-family:"DotGothic16",monospace;color:var(--ink);
+  image-rendering:pixelated;
+  background:
+    linear-gradient(180deg, var(--wall) 0%, var(--wall) 52%, #6b5a3f 52%, #6b5a3f 55%, var(--tatami) 55%, var(--tatami) 100%);
+}
+.pixel-root *{box-sizing:border-box;image-rendering:pixelated;}
+/* tatami seams */
+.pixel-root::before{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:45%;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 78px, rgba(28,20,14,.18) 78px 80px),
+    repeating-linear-gradient(0deg, transparent 0 78px, rgba(28,20,14,.10) 78px 80px);
+}
+/* rising sun on the wall */
+.pixel-sun{position:absolute;top:40px;right:60px;width:90px;height:90px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 0 8px rgba(207,75,58,.25);z-index:0;}
+
+.pixel-win{background:var(--cream);border:4px solid var(--ink);
+  box-shadow:6px 6px 0 var(--shadow), inset 0 0 0 3px var(--cream-2);}
+
+.pixel-game{position:relative;z-index:1;display:grid;grid-template-columns:236px 1fr 250px;
+  gap:24px;height:100%;padding:28px;align-items:start;}
+.pixel-rail{padding:20px;display:flex;flex-direction:column;gap:20px;height:100%;}
+
+.pixel-brand{text-align:center;border-bottom:3px solid var(--ink);padding-bottom:16px;}
+.pixel-brand .kanji{font-family:"Zen Old Mincho",serif;font-size:40px;font-weight:900;line-height:1;}
+.pixel-brand .latin{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:1px;color:var(--ink-2);margin-top:10px;line-height:1.6;}
+
+.pixel-label{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:1px;color:var(--ink-2);margin-bottom:9px;}
+.pixel-timer{font-family:"Press Start 2P",monospace;font-size:26px;color:var(--ink);line-height:1;letter-spacing:1px;}
+.pixel-elobox{margin-top:auto;border:3px solid var(--ink);background:var(--cream-2);padding:14px;}
+.pixel-elo{font-family:"Press Start 2P",monospace;font-size:24px;color:var(--red);line-height:1;}
+.pixel-elo small{font-size:9px;color:var(--ink-2);margin-left:6px;}
+.pixel-hp{height:14px;border:3px solid var(--ink);background:#fff;margin:12px 0 8px;padding:0;display:flex;}
+.pixel-hp i{display:block;height:100%;width:62%;background:var(--tatami-2);
+  background-image:repeating-linear-gradient(90deg,transparent 0 8px,rgba(28,20,14,.18) 8px 10px);}
+.pixel-elobox .you{font-size:13px;color:var(--ink-2);}
+
+/* grid */
+.pixel-board-wrap{display:flex;align-items:center;justify-content:center;height:100%;}
+.pixel-grid{display:grid;grid-template-columns:repeat(9,52px);grid-template-rows:repeat(9,52px);
+  background:var(--ink);border:5px solid var(--ink);gap:0;
+  box-shadow:7px 7px 0 var(--shadow);}
+.pixel-cell{background:var(--cream);display:flex;align-items:center;justify-content:center;position:relative;
+  font-family:"DotGothic16",monospace;font-size:30px;font-weight:700;
+  border-right:1px solid rgba(28,20,14,.28);border-bottom:1px solid rgba(28,20,14,.28);}
+.pixel-cell.cr{border-right:4px solid var(--ink);}
+.pixel-cell.cb{border-bottom:4px solid var(--ink);}
+.pixel-cell:nth-child(9n){border-right:none;}
+.pixel-grid > .pixel-cell:nth-last-child(-n+9){border-bottom:none;}
+.pixel-cell.peer{background:#f6eccb;}
+.pixel-cell.sel{background:var(--yellow);box-shadow:inset 0 0 0 4px var(--ink);}
+.pixel-cell.given{color:var(--ink);}
+.pixel-cell.user{color:var(--blue);}
+.pixel-notes{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);width:100%;height:100%;padding:3px;}
+.pixel-notes span{font-size:12px;color:var(--ink-2);display:flex;align-items:center;justify-content:center;line-height:1;}
+
+/* number pad */
+.pixel-right{padding:20px;display:flex;flex-direction:column;height:100%;}
+.pixel-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
+.pixel-key{aspect-ratio:1;background:var(--cream-2);border:3px solid var(--ink);
+  font-family:"DotGothic16",monospace;font-size:30px;font-weight:700;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;box-shadow:3px 3px 0 var(--shadow);}
+.pixel-key.lit{background:var(--gold);box-shadow:none;transform:translate(3px,3px);}
+.pixel-tools{margin-top:auto;padding-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pixel-tool{padding:12px 0;text-align:center;background:var(--cream-2);border:3px solid var(--ink);
+  font-family:"Press Start 2P",monospace;font-size:9px;letter-spacing:1px;color:var(--ink);box-shadow:3px 3px 0 var(--shadow);}
+.pixel-tool.on{background:var(--red);color:var(--cream);box-shadow:none;transform:translate(3px,3px);}
+
+/* ── Rank screen ── */
+.pixel-rank{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;
+  padding:48px 56px 50px;}
+.pixel-rank .head{text-align:center;margin-bottom:38px;}
+.pixel-rank .sub{font-family:"Zen Old Mincho",serif;font-size:20px;letter-spacing:8px;color:var(--red);margin-bottom:16px;}
+.pixel-rank h1{font-family:"Press Start 2P",monospace;font-size:28px;color:var(--ink);margin:0;line-height:1.3;
+  white-space:nowrap;text-shadow:3px 3px 0 rgba(243,228,195,.9),5px 5px 0 var(--shadow);}
+.pixel-rank .lead{font-family:"DotGothic16",monospace;font-size:15px;color:#4a3a28;margin-top:18px;}
+.pixel-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;width:100%;max-width:1000px;}
+.pixel-card{background:var(--cream);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--shadow);
+  padding:24px 18px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.pixel-card.sel{background:var(--yellow);transform:translateY(-8px);box-shadow:6px 12px 0 var(--shadow);}
+.pixel-card .ckanji{font-family:"Zen Old Mincho",serif;font-size:50px;font-weight:900;line-height:1;margin-bottom:16px;}
+.pixel-belt{width:100%;height:18px;border:3px solid var(--ink);margin-bottom:18px;}
+.pixel-belt.shiro{background:#f7eed5;} .pixel-belt.midori{background:var(--tatami-2);}
+.pixel-belt.kuro{background:#2c2018;} .pixel-belt.shishou{
+  background:repeating-linear-gradient(45deg,var(--red) 0 8px,var(--gold) 8px 16px);}
+.pixel-card .romaji{font-family:"Press Start 2P",monospace;font-size:11px;line-height:1.4;color:var(--ink);}
+.pixel-card .level{font-family:"DotGothic16",monospace;font-size:13px;letter-spacing:1px;color:var(--ink-2);margin:8px 0 12px;text-transform:uppercase;}
+.pixel-card .desc{font-size:14px;line-height:1.5;color:#3a2c1c;min-height:66px;}
+.pixel-card .elo{margin-top:14px;padding-top:12px;border-top:3px solid var(--ink);width:100%;
+  font-family:"Press Start 2P",monospace;font-size:7px;letter-spacing:1px;color:var(--ink-2);line-height:1.6;}
+.pixel-card .elo b{display:block;margin-top:8px;font-size:18px;color:var(--red);}
+.pixel-pick{margin-top:16px;font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:1px;color:var(--ink);height:12px;}

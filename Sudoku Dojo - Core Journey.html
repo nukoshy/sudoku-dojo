@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sudoku Dojo — Core Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;500;600;700;900&family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/dojo-app.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="app/data.jsx"></script>
+<script type="text/babel" src="app/content.jsx"></script>
+<script type="text/babel" src="app/icons.jsx"></script>
+<script type="text/babel" src="app/audio.jsx"></script>
+<script type="text/babel" src="app/onboarding.jsx"></script>
+<script type="text/babel" src="app/auth.jsx"></script>
+<script type="text/babel" src="app/home.jsx"></script>
+<script type="text/babel" src="app/profile.jsx"></script>
+<script type="text/babel" src="app/lesson.jsx"></script>
+<script type="text/babel" src="app/leaderboard.jsx"></script>
+<script type="text/babel" src="app/nav.jsx"></script>
+<script type="text/babel" src="app/paywall.jsx"></script>
+<script type="text/babel" src="app/game.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function App() {
+  const [screen, setScreen] = useState('welcome');
+  const [profile, setProfile] = useState({
+    nick: '', sfx: true, homeLevelIdx: 1, homeCtrl: 'blitz', zen: false,
+    controlKey: 'blitz', label: 'Blitz', levelKey: 'blitz', seed: 600, empties: 24, hints: 2, timeLimit: 420,
+    rating: 400, startRating: 400, ratings: makeRatings(400),
+    solved: 0, streak: 0, bestStreak: 0, games: 0, perfect: 0, fastest: null,
+    byLevel: makeStats(), history: [],
+    premium: false, dailyRatedUsed: 0, seenFirstSolvePrompt: false, pendingFirst: false,
+  });
+  const [puzzleKey, setPuzzleKey] = useState(0);
+  const [lessonTech, setLessonTech] = useState('naked-single');
+  const [lessonFromFail, setLessonFromFail] = useState(false);
+  const [ratedGate, setRatedGate] = useState(false);
+  const [payReason, setPayReason] = useState('');
+  const [prevScreen, setPrevScreen] = useState('home');
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // unlock audio on first gesture; subtle paper tap on menu buttons
+  useEffect(() => {
+    const unlock = () => { window.DojoAudio && DojoAudio.unlock(); };
+    const tap = (e) => {
+      const b = e.target.closest && e.target.closest('.pix-btn, .nav-row.live, .lb-tab, .ps-tab');
+      if (b && !b.disabled) { window.DojoAudio && DojoAudio.unlock(); window.DojoAudio && DojoAudio.tap(); }
+      else { window.DojoAudio && DojoAudio.unlock(); }
+    };
+    window.addEventListener('pointerdown', tap);
+    return () => window.removeEventListener('pointerdown', tap);
+  }, []);
+
+  function onAuth(opts) {
+    setProfile((p) => ({ ...p, nick: opts.nick || 'Deshi', provider: opts.provider }));
+    setScreen('familiarity');
+  }
+  function chooseFamiliarity(i) {
+    const f = FAMILIARITY[i] || FAMILIARITY[1];
+    setProfile((p) => ({ ...p, rating: f.seed, startRating: f.seed, ratings: makeRatings(f.seed) }));
+    setScreen('home');
+  }
+  // Rated game: a chess-style time control (its own clock + rating).
+  function startGameRated(ctrlKey) {
+    const t = CONTROL_BY_KEY[ctrlKey] || TIME_CONTROLS[1];
+    const gated = !profile.premium && (profile.dailyRatedUsed || 0) >= FREE_DAILY_RATED;
+    setRatedGate(gated);
+    setProfile((p) => {
+      const r = (p.ratings && p.ratings[ctrlKey]) || p.rating || 400;
+      const base = { ...p, zen: false, controlKey: ctrlKey, label: t.en, homeCtrl: ctrlKey,
+        empties: t.empties, hints: t.hints, timeLimit: t.limit, seed: r, rating: r };
+      if (gated) return base;
+      const bk = p.byLevel[ctrlKey] || { played: 0, solved: 0, noMistake: 0, bestTime: null };
+      return { ...base, games: (p.games || 0) + 1, dailyRatedUsed: (p.dailyRatedUsed || 0) + 1,
+        byLevel: { ...p.byLevel, [ctrlKey]: { ...bk, played: bk.played + 1 } } };
+    });
+    setPuzzleKey((k) => k + 1);
+    setScreen('game');
+  }
+  // Zen game: a difficulty level, no clock, no rating.
+  function startGameZen(i) {
+    const lv = LEVELS[i] || LEVELS[0];
+    setRatedGate(false);
+    setProfile((p) => ({ ...p, zen: true, levelKey: lv.key, label: lv.en + ' Zen', homeLevelIdx: i,
+      empties: lv.empties, hints: lv.hints, timeLimit: null }));
+    setPuzzleKey((k) => k + 1);
+    setScreen('game');
+  }
+  function commitResult(res) {
+    setProfile((p) => {
+      const key = p.controlKey;
+      const ratings = { ...(p.ratings || makeRatings(p.rating)) };
+      const history = [{ label: p.label || 'Rated', time: res.time, mistakes: res.mistakes,
+        hintsUsed: res.hintsUsed, delta: res.delta, newRating: res.newRating, failed: !!res.failed }]
+        .concat(p.history || []).slice(0, 12);
+      ratings[key] = res.newRating;
+      const rating = Math.max(ratings.bullet, ratings.blitz, ratings.rapid);
+      if (res.failed) return { ...p, ratings, rating, streak: 0, history };
+      const bk = p.byLevel[key] || { played: 0, solved: 0, noMistake: 0, bestTime: null };
+      const byLevel = { ...p.byLevel, [key]: { ...bk, solved: bk.solved + 1,
+        noMistake: bk.noMistake + (res.mistakes === 0 ? 1 : 0),
+        bestTime: bk.bestTime == null ? res.time : Math.min(bk.bestTime, res.time) } };
+      const streak = (p.streak || 0) + 1;
+      const perfect = (p.perfect || 0) + ((res.mistakes === 0 && res.hintsUsed === 0) ? 1 : 0);
+      const fastest = p.fastest == null ? res.time : Math.min(p.fastest, res.time);
+      const firstTime = !p.seenFirstSolvePrompt;
+      return { ...p, ratings, rating, solved: (p.solved || 0) + 1, streak,
+        bestStreak: Math.max(p.bestStreak || 0, streak), perfect, fastest, byLevel, history,
+        seenFirstSolvePrompt: true, pendingFirst: firstTime };
+    });
+  }
+  function afterGameLeave(go) {
+    if (profile.pendingFirst) { setProfile((p) => ({ ...p, pendingFirst: false })); setScreen('firstprompt'); }
+    else go();
+  }
+  function newPuzzle() { afterGameLeave(() => (profile.zen ? startGameZen(profile.homeLevelIdx) : startGameRated(profile.controlKey))); }
+  function learn(techKey) { setLessonTech(techKey); setLessonFromFail(true); setScreen('lesson'); }
+  function openTechnique(techKey) { setLessonTech(techKey); setLessonFromFail(false); setScreen('lesson'); }
+  function openPaywall(reason) { setPayReason(reason || ''); setPrevScreen(screen); setScreen('paywall'); }
+  function doUpgrade() { setProfile((p) => ({ ...p, premium: true })); setScreen('home'); setShowWelcome(true); }
+
+  return (
+    <Stage>
+      {screen === 'welcome' &&
+        <Welcome key="w" onBegin={() => setScreen('auth')} />}
+      {screen === 'auth' &&
+        <Auth key="au" onAuth={onAuth} />}
+      {screen === 'familiarity' &&
+        <Familiarity key="fm" onNext={chooseFamiliarity} />}
+      {screen === 'home' &&
+        <Home key="h" profile={profile} onPlayRated={startGameRated} onPlayZen={startGameZen}
+          onProfile={() => setScreen('profile')} onPuzzleRush={() => setScreen('puzzlerush')}
+          onUpgrade={() => openPaywall('')} />}
+      {screen === 'profile' &&
+        <Profile key="pr" profile={profile} onBack={() => setScreen('home')}
+          onUpgrade={() => openPaywall('Unlock rating history and the full belt path.')} />}
+      {screen === 'leaderboard' &&
+        <Leaderboard key="lb" profile={profile} onBack={() => setScreen('home')}
+          onUpgrade={() => openPaywall('Join the leaderboard with Dojo Pass.')} />}
+      {screen === 'techniques' &&
+        <Techniques key="tk" profile={profile} onBack={() => setScreen('home')} onOpen={openTechnique}
+          onLocked={() => openPaywall('Unlock the full Technique Library with Dojo Pass.')} />}
+      {screen === 'lesson' &&
+        <Lesson key="ls" tech={TECH_BY_KEY[lessonTech]} fromFail={lessonFromFail}
+          onBack={() => setScreen(lessonFromFail ? 'home' : 'techniques')}
+          onDone={() => { if (lessonFromFail) startGameRated(profile.homeCtrl); else setScreen('techniques'); }} />}
+      {screen === 'puzzlerush' &&
+        <PuzzleRush key="prh" premium={profile.premium} onBack={() => setScreen('home')}
+          onUpgrade={() => openPaywall('Puzzle Rush is a Dojo Pass mode.')} />}
+      {screen === 'paywall' &&
+        <Paywall key="pw" reason={payReason} onBack={() => setScreen(prevScreen || 'home')} onUpgrade={doUpgrade} />}
+      {screen === 'firstprompt' &&
+        <FirstSolvePrompt key="fp" profile={profile}
+          onDismiss={() => setScreen('home')} onUpgrade={() => openPaywall('')} />}
+      {screen === 'game' &&
+        <Game key={'g' + puzzleKey} profile={profile} onNewPuzzle={newPuzzle}
+          onExit={() => afterGameLeave(() => setScreen('home'))} onResult={commitResult} onLearn={learn}
+          gated={ratedGate} onPlayZen={() => startGameZen(profile.homeLevelIdx)}
+          onUpgrade={() => openPaywall("You've used today's free rated puzzle.")} />}
+      {['home', 'leaderboard', 'techniques', 'profile'].includes(screen) &&
+        <TabBar active={screen} onNav={setScreen}
+          onPlay={() => startGameRated(profile.homeCtrl)} />}
+      {showWelcome && <WelcomeConfirm onDone={() => setShowWelcome(false)} />}
+    </Stage>
+  );
+}
+
+// Fixed 1280x800 stage, scaled to fit viewport, letterboxed on the dark wall.
+function Stage({ children }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    function fit() {
+      const s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
+      if (ref.current) ref.current.style.transform = 'scale(' + s + ')';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
+  return <div className="dojo-stage" ref={ref}>{children}</div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

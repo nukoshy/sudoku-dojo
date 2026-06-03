@@ -1,0 +1,113 @@
+/* Variant A — Zen Ink. Washi paper, sumi ink, hanko red. Scoped to .zen-root */
+.zen-root{
+  --paper:#ece3d0;
+  --paper-2:#e4d9c2;
+  --ink:#2b2620;
+  --ink-soft:#7d7264;
+  --ink-faint:#a89c89;
+  --indigo:#2f4a6b;      /* user-entered numbers */
+  --hanko:#b1402f;       /* seal red */
+  --line:#b9ac94;
+  --line-strong:#6d6353;
+  width:100%;height:100%;
+  position:relative;
+  font-family:"Shippori Mincho",serif;
+  color:var(--ink);
+  background:
+    radial-gradient(120% 90% at 15% 0%, #f2ead9 0%, rgba(242,234,217,0) 55%),
+    radial-gradient(90% 80% at 100% 100%, #e0d4ba 0%, rgba(224,212,186,0) 60%),
+    var(--paper);
+  overflow:hidden;
+}
+/* subtle paper grain */
+.zen-root::before{
+  content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+}
+.zen-root *{box-sizing:border-box;}
+
+.zen-game{position:relative;z-index:1;display:grid;grid-template-columns:236px 1fr 250px;height:100%;}
+.zen-rail{padding:46px 34px;display:flex;flex-direction:column;}
+.zen-rail.left{border-right:1px solid var(--line);}
+.zen-rail.right{border-left:1px solid var(--line);}
+
+.zen-brand{display:flex;flex-direction:column;gap:6px;margin-bottom:54px;}
+.zen-brand .kanji{font-family:"Zen Old Mincho",serif;font-weight:900;font-size:46px;line-height:.9;letter-spacing:4px;}
+.zen-brand .latin{font-size:12px;letter-spacing:5px;color:var(--ink-soft);text-transform:uppercase;}
+
+.zen-meta{margin-top:auto;display:flex;flex-direction:column;gap:34px;}
+.zen-label{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;}
+.zen-timer{font-family:"Zen Old Mincho",serif;font-size:52px;line-height:1;font-variant-numeric:tabular-nums;}
+
+.zen-rating{position:relative;}
+.zen-elo{font-family:"Zen Old Mincho",serif;font-size:48px;line-height:1;display:flex;align-items:baseline;gap:10px;}
+.zen-elo small{font-size:16px;color:var(--ink-soft);letter-spacing:1px;}
+.zen-rating .you{margin-top:12px;font-size:13px;color:var(--ink-soft);letter-spacing:.5px;}
+.zen-seal{position:absolute;top:-6px;right:6px;width:50px;height:50px;border:2px solid var(--hanko);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;color:var(--hanko);transform:rotate(-7deg);
+  font-family:"Zen Old Mincho",serif;font-weight:700;font-size:22px;letter-spacing:0;
+  box-shadow:inset 0 0 0 1px rgba(177,64,47,.35);}
+
+/* board */
+.zen-board-wrap{display:flex;align-items:center;justify-content:center;}
+.zen-grid{display:grid;grid-template-columns:repeat(9,56px);grid-template-rows:repeat(9,56px);
+  background:rgba(255,255,255,.28);
+  border:3px solid var(--line-strong);
+  box-shadow:0 2px 0 rgba(109,99,83,.18),0 18px 40px -22px rgba(43,38,32,.5);}
+.zen-cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;position:relative;
+  font-size:30px;font-weight:500;line-height:1;}
+.zen-cell.cr{border-right:2px solid var(--line-strong);}
+.zen-cell.cb{border-bottom:2px solid var(--line-strong);}
+.zen-cell:nth-child(9n){border-right:none;}
+.zen-grid > .zen-cell:nth-last-child(-n+9){border-bottom:none;}
+.zen-cell.peer{background:rgba(177,64,47,.05);}
+.zen-cell.sel{background:rgba(177,64,47,.13);box-shadow:inset 0 0 0 2px var(--hanko);}
+.zen-cell.given{color:var(--ink);}
+.zen-cell.user{color:var(--indigo);}
+.zen-notes{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  width:100%;height:100%;padding:5px;}
+.zen-notes span{font-size:11px;color:var(--ink-faint);display:flex;align-items:center;justify-content:center;line-height:1;}
+
+/* number pad + tools */
+.zen-right-inner{display:flex;flex-direction:column;height:100%;}
+.zen-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;}
+.zen-key{aspect-ratio:1;border:1px solid var(--line);background:rgba(255,255,255,.32);
+  font-family:"Zen Old Mincho",serif;font-size:30px;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;border-radius:3px;
+  box-shadow:0 1px 0 rgba(109,99,83,.18);}
+.zen-key.lit{background:rgba(177,64,47,.1);border-color:var(--hanko);color:var(--hanko);}
+.zen-tools{margin-top:auto;padding-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.zen-tool{display:flex;flex-direction:column;align-items:center;gap:4px;padding:13px 0;
+  border:1px solid var(--line);border-radius:3px;background:rgba(255,255,255,.18);}
+.zen-tool .jp{font-size:15px;}
+.zen-tool .en{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);}
+.zen-tool.on{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.zen-tool.on .en{color:rgba(236,227,208,.7);}
+
+/* ── Rank screen ── */
+.zen-rank{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;
+  align-items:center;padding:64px 60px 56px;}
+.zen-rank .head{text-align:center;margin-bottom:46px;}
+.zen-rank .head .sub{font-family:"Zen Old Mincho",serif;font-size:22px;letter-spacing:10px;color:var(--hanko);margin-bottom:14px;}
+.zen-rank .head h1{font-family:"Zen Old Mincho",serif;font-weight:700;font-size:46px;letter-spacing:1px;margin:0;white-space:nowrap;}
+.zen-rank .head .lead{font-size:14px;color:var(--ink-soft);margin-top:12px;letter-spacing:.5px;}
+.zen-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;width:100%;max-width:1000px;}
+.zen-card{position:relative;border:1px solid var(--line);background:rgba(255,255,255,.3);
+  padding:30px 22px 26px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  border-radius:3px;box-shadow:0 1px 0 rgba(109,99,83,.16);}
+.zen-card.sel{border:1.5px solid var(--ink);background:rgba(255,255,255,.55);
+  box-shadow:0 20px 44px -24px rgba(43,38,32,.55);transform:translateY(-8px);}
+.zen-card .ckanji{font-family:"Zen Old Mincho",serif;font-weight:900;font-size:54px;line-height:1;margin-bottom:18px;}
+.zen-belt{width:100%;height:16px;border-radius:2px;position:relative;margin-bottom:20px;border:1px solid rgba(43,38,32,.18);}
+.zen-belt::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:22px;height:22px;border:1px solid rgba(43,38,32,.25);background:inherit;border-radius:2px;}
+.zen-belt.shiro{background:#f3ecdc;} .zen-belt.midori{background:#6f8f5f;}
+.zen-belt.kuro{background:#2b2620;} .zen-belt.shishou{background:#9c3326;}
+.zen-card .romaji{font-size:19px;font-weight:600;letter-spacing:.5px;}
+.zen-card .level{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-soft);margin:5px 0 14px;}
+.zen-card .desc{font-size:13px;line-height:1.55;color:var(--ink);min-height:62px;}
+.zen-card .elo{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);width:100%;
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);}
+.zen-card .elo b{font-family:"Zen Old Mincho",serif;font-size:22px;font-weight:700;color:var(--ink);letter-spacing:0;display:block;margin-top:4px;text-transform:none;}
+.zen-pick{margin-top:18px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--hanko);height:14px;}
