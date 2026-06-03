@@ -2,7 +2,10 @@
    Sudoku Dojo — core flow styles. Pixel Dojo direction.
    Locked tokens per CLAUDE.md.
    ============================================================ */
-.dojo-stage{
+
+/* Design tokens on :root so they resolve anywhere in the document
+   (html, body, ::before on #root, media queries, etc.). */
+:root{
   --ink:#2c2018;
   --ink-2:#5a4632;
   --ink-3:#7a6446;
@@ -23,8 +26,26 @@
 }
 
 /* ---- stage / scaling ---- */
-html,body{margin:0;height:100%;background:#160f08;}
-#root{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+html,body{margin:0;height:100%;}
+/* #root carries the full dojo scene background so the area outside the
+   scaled stage shows the seamless wall→tatami gradient (no black bars). */
+#root{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  background:linear-gradient(180deg,
+    var(--wall) 0%, var(--wall) 52%,
+    var(--wall-d) 52%, var(--wall-d) 55%,
+    var(--tatami) 55%, var(--tatami) 100%);
+}
+/* Tatami seam grid extends into the side bars for a seamless look. */
+#root::before{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:45%;
+  pointer-events:none;z-index:0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 86px, rgba(28,20,14,.16) 86px 88px),
+    repeating-linear-gradient(0deg,  transparent 0 86px, rgba(28,20,14,.09) 86px 88px);
+}
 .dojo-stage{
   position:relative;width:1280px;height:800px;flex:none;
   transform-origin:center center;
@@ -34,10 +55,9 @@ html,body{margin:0;height:100%;background:#160f08;}
     var(--wall) 0%, var(--wall) 52%,
     var(--wall-d) 52%, var(--wall-d) 55%,
     var(--tatami) 55%, var(--tatami) 100%);
-  box-shadow:0 30px 90px -30px #000;
 }
 .dojo-stage *{box-sizing:border-box;image-rendering:pixelated;}
-.dojo-stage::before{ /* tatami seams */
+.dojo-stage::before{ /* tatami seams inside stage */
   content:"";position:absolute;left:0;right:0;bottom:0;height:45%;pointer-events:none;z-index:0;
   background:
     repeating-linear-gradient(90deg, transparent 0 86px, rgba(28,20,14,.16) 86px 88px),
@@ -845,7 +865,8 @@ html,body{margin:0;height:100%;background:#160f08;}
    ============================================================ */
 @media (max-width: 760px){
   html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto;background:var(--wall-d);}
-  #root{position:static;display:block;overflow:visible;height:auto;}
+  #root{position:static;display:block;overflow:visible;height:auto;background:none;}
+  #root::before{display:none;}
   .dojo-stage{position:relative;width:100%;min-height:100vh;height:auto;flex:none;
     transform:none !important;box-shadow:none;overflow:visible;}
   .screen{position:relative;inset:auto;height:auto;min-height:100vh;}

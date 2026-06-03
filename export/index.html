@@ -252,9 +252,9 @@ function App() {
   );
 }
 
-// On desktop/tablet: a fixed 1280x800 stage scaled to fit, letterboxed on the
-// dark wall. On phones (<=760px): drop the transform so the stage goes fluid
-// and the CSS mobile layout (single-column, scrollable) takes over.
+// On desktop/tablet: scale the 1280×800 stage to fill the viewport height exactly
+// (the #root background extends the scene into any remaining side area).
+// On phones (<=760px): drop the transform — the CSS mobile layout takes over.
 const MOBILE_BP = 760;
 function Stage({ children }) {
   const ref = useRef(null);
@@ -266,6 +266,9 @@ function Stage({ children }) {
       if (mobile) {
         ref.current.style.transform = 'none';
       } else {
+        // Scale to contain (no overflow on any monitor shape).
+        // The #root carries the same scene gradient so any uncovered area
+        // looks like a seamless extension of the scene — no black bars.
         const s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
         ref.current.style.transform = 'scale(' + s + ')';
       }
