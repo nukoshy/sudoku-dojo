@@ -1,69 +1,119 @@
 # 数独道場 — Sudoku Dojo
 
-A pixel-art Sudoku app prototype where **every puzzle is Elo-rated and matched to your skill**, like chess.com for Sudoku. Built as a single interactive HTML prototype in a retro "Pixel Dojo" visual style (cream washi paper, hard pixel shadows, hanko seals, tatami floor).
+**Every puzzle is Elo-rated and matched to your skill** — like chess.com, but for Sudoku.
+Pixel-art Japanese dojo aesthetic. Real auth. Real rating. Real leaderboard.
 
-![Sudoku Dojo](screenshots/03-n-home.png)
+🔴 **Live → [sudoku-web-production.up.railway.app](https://sudoku-web-production.up.railway.app)**
 
-## Concept
+---
 
-Sit, breathe, solve. Rather than static "easy/medium/hard", Sudoku Dojo treats Sudoku like a competitive rated game: you earn a rating by playing, climb a belt rank (White → Sensei), and every puzzle is matched to where you are.
+## What it is
+
+Sit, breathe, solve. Instead of static easy/medium/hard buckets, Sudoku Dojo gives every puzzle a difficulty rating and matches it to yours. Beat harder puzzles, gain Elo. Climb the belt ranks. Appear on the global leaderboard.
+
+## Game modes
+
+| Mode | Clock | Rating | Blanks | Hints |
+|------|-------|--------|--------|-------|
+| **Bullet** | 3 min ↓ | ✓ real Elo | 35 | 1 |
+| **Blitz** | 7 min ↓ | ✓ real Elo | 45 | 2 |
+| **Rapid** | 15 min ↓ | ✓ real Elo | 55 | 3 |
+| **Zen Beginner** | — | — | 30 | 5 |
+| **Zen Intermediate** | — | — | 40 | 3 |
+| **Zen Advanced** | — | — | 50 | 2 |
+| **Zen Expert** | — | — | 58 | 1 |
+
+Rated modes fail on timeout or 3 mistakes and adjust your Elo in both directions. Zen is pure practice — no timer, no rating, no fail.
 
 ## Features
 
-- **Two ways to play**
-  - **Rated** — chess-style time controls (**Bullet** 3 min · **Blitz** 7 min · **Rapid** 15 min), each with its *own* rating and a countdown clock that fails you on timeout.
-  - **Zen** — relaxed difficulty levels (Beginner → Expert), no clock, no rating, no pressure.
-- **Real difficulty** — modes genuinely differ in blank count, hint budget, and time pressure.
-- **Rating & belts** — start from a familiarity question, then gain/lose Elo per game (provisional swings for your first solves); earn belt ranks and **hanko-stamp achievements**.
-- **Interactive grid** — keyboard + pad entry, pencil notes, hints, undo, erase, mistake tracking.
-- **Teaching loop** — fail a puzzle and the dojo suggests the technique it needed, with an interactive lesson (Naked Single → X-Wing).
-- **Leaderboard** — global / friends ranks with belt swatches.
-- **Profile** — circular avatar, per-control rating list, rating-history sparkline, stats, and achievement stamps.
-- **Monetization** — freemium with a **Dojo Pass** tier (gates shown, never hidden; no ads).
-- **Sound design** — generated WebAudio SFX: felt-tip pen, pencil, eraser, page-turn hints, temple-bell win.
+- **Real unique-solution puzzles** — constraint propagation + MRV backtracking generator. Every game is a fresh puzzle; never the same grid twice.
+- **Standard Elo** — `K × (score − expected)` with K=40 provisional (<20 games), K=20 established. Puzzle Elo: Bullet 900 · Blitz 1100 · Rapid 1300.
+- **Belt ranks** — White → Yellow → Green → Brown → Black → Sensei, earned by rating.
+- **Real auth** — Supabase email OTP (magic link in email) + Google Identity Services.
+- **Real leaderboard** — live Supabase query; your row appears automatically after your first rated game.
+- **Real persistence** — ratings, streaks, history, achievements all saved per-user in Supabase.
+- **Technique library** — 5 interactive lessons (Naked Single → X-Wing). Fail a puzzle and the dojo suggests the relevant technique.
+- **Adaptive layout** — full-width mobile reflow below 760 px; fixed 1280×800 pixel-art canvas on desktop.
+- **Synthesized audio** — 9 WebAudio SFX (felt-tip pen, pencil, eraser, page-turn hints, temple-bell win). No audio files.
+- **Freemium** — 1 free rated game/day; Dojo Pass unlocks unlimited rated + leaderboard participation.
 
-## Running
+## Stack
 
-Production app built per [`SPEC.md`](SPEC.md): React 18 + TypeScript (strict) · Vite · Tailwind v3 · Zustand · React Router v6 · Framer Motion · Web Audio.
+The live site serves `export/` — a plain HTML + CDN-React prototype wired to real backends.
+
+| Layer | Tech |
+|-------|------|
+| UI | React 18 (CDN + Babel), vanilla JS/JSX |
+| Styling | Single CSS file (`dojo-app.css`) — Pixel Dojo design tokens |
+| Auth | Supabase (email OTP + Google) |
+| Database | Supabase Postgres (`dojo_profiles` jsonb · `leaderboard_entries`) |
+| Hosting | Railway (Dockerfile, Node static server) |
+| Fonts | DotGothic16 · Press Start 2P · Zen Old Mincho |
+
+`src/` contains a full **React 18 + TypeScript + Vite** app (Zustand, Tailwind, Framer Motion, Glicko-2 engine) built to the original `SPEC.md`. It is not the deployed version but is production-complete.
+
+## Running locally
 
 ```bash
+# Serve the live prototype (export/) locally
+node server.mjs          # http://localhost:3000
+
+# Or develop the TypeScript app (src/)
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # typecheck + production build to dist/
-npm run test     # engine unit tests (generator, solver, difficulty, Glicko-2)
+npm run dev              # http://localhost:5173
+npm run build            # typecheck + Vite build → dist/
+npm run test             # 8 engine unit tests (solver, generator, Glicko-2)
 ```
 
-### Backend (optional)
+## Backend setup
 
-The app runs fully in **guest mode** (localStorage + mock checkout) with zero setup.
-To enable real backends, copy `.env.example` → `.env` and fill in:
+No setup needed to run locally — the prototype works in local-only mode with no backend.
 
-- **Supabase** (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) — auth + Postgres + Realtime.
-  Schema is in [`SPEC.md`](SPEC.md#supabase-schema).
-- **Stripe** (`VITE_STRIPE_PUBLISHABLE_KEY`) — Embedded Checkout (needs a backend session endpoint).
-
-When the keys are absent, `src/lib/supabase.ts` and `src/lib/stripe.ts` transparently fall back.
-
-## Structure
+To enable real auth and data, add these to Railway (or a `.env` file for local dev):
 
 ```
-src/
-  engine/      generator · solver (constraint-prop + backtrack) · difficulty
-               (technique-weighted Elo) · rating (Glicko-2) · techniques
-  stores/      Zustand: game · player · settings · auth · leaderboard
-  audio/       Web Audio engine + synthesized sound definitions
-  components/  Grid · Cell · NumberPad · BeltBadge · HankoStamp ·
-               Sparkline · UpgradePrompt · Icon · PixelButton · Nav
-  screens/     Onboarding · Home · Play · Profile · Leaderboard ·
-               Techniques · Paywall
-  lib/         constants (belts, achievements, time controls, gates) ·
-               supabase · stripe
-  styles/      tokens.css (Pixel Dojo design tokens)
+SUPABASE_URL=...
+SUPABASE_ANON_KEY=...
+GOOGLE_CLIENT_ID=...
 ```
 
-## Status
+Then run the SQL files in Supabase → SQL Editor:
 
-Playable end-to-end against the local engine: real puzzle generation with
-guaranteed-unique solutions, Glicko-2 rating updates (player + puzzle), belts,
-achievements, streaks, freemium gates, and interactive technique lessons.
-Auth and payments fall back to guest/mock until Supabase/Stripe keys are provided.
+1. [`supabase/schema.sql`](supabase/schema.sql) — per-user profile table + RLS
+2. [`supabase/leaderboard.sql`](supabase/leaderboard.sql) — public leaderboard table + RLS
+
+In Supabase dashboard:
+- **Auth → Providers → Google** → enable, paste client ID
+- **Auth → URL Configuration → Site URL** → your Railway domain
+- **Auth → Sign In / Providers → Email** → uncheck "Confirm email" (enables OTP flow)
+
+## Repository structure
+
+```
+export/              Live production app (plain HTML + CDN React)
+  app/
+    generator.jsx    Sudoku solver + unique-solution puzzle generator
+    game.jsx         Interactive board (notes, hints, undo, Elo calculation)
+    auth.jsx         Email OTP + Google sign-in
+    supabase.jsx     Backend layer (auth, profile persistence, leaderboard)
+    leaderboard.jsx  Real Supabase leaderboard query
+    content.jsx      Belts, Elo math, techniques, achievements
+    home.jsx         Dashboard (Rated/Zen mode selection, stats)
+    profile.jsx      Rating, belt path, hanko stamps
+    ...
+  styles/
+    dojo-app.css     All styles + mobile adaptive rules
+  index.html         App shell, screen routing, Elo commit, session restore
+
+src/                 TypeScript app (not deployed — production-complete)
+  engine/            Solver · generator · Glicko-2 · difficulty scorer
+  stores/            Zustand: game · player · auth · leaderboard · settings
+  screens/           Home · Play · Profile · Leaderboard · Techniques · Paywall
+  components/        Grid · Cell · NumberPad · BeltBadge · Sparkline · ...
+
+supabase/            SQL migration files
+Dockerfile           Node static server (serves export/)
+server.mjs           Dependency-free file server with SPA fallback + /config.js endpoint
+railway.json         Railway deployment config
+```
