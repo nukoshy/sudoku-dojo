@@ -379,7 +379,7 @@ html,body{margin:0;height:100%;}
 .hp-play{margin-top:22px;font-size:15px;padding:18px 4px;align-self:stretch;text-align:center;}
 
 /* recent games */
-.home-recent{flex:1;min-height:0;padding:22px 26px;display:flex;flex-direction:column;}
+.home-recent{flex:1;min-height:0;padding:22px 26px;display:flex;flex-direction:column;overflow:hidden;}
 .hr-head{display:flex;justify-content:space-between;align-items:center;font-family:"Press Start 2P",monospace;
   font-size:9px;letter-spacing:1px;color:var(--ink-2);margin-bottom:14px;}
 .hr-count{color:var(--ink-3);font-size:8px;}
