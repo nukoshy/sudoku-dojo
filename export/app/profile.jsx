@@ -18,7 +18,7 @@ function Sparkline({ series }) {
   );
 }
 
-function Profile({ profile, onBack, onUpgrade }) {
+function Profile({ profile, onBack, onUpgrade, onLogout }) {
   const [open, setOpen] = useStateP('rapid');
   const stats = profile.byLevel || makeStats();
   const ratings = profile.ratings || makeRatings(profile.rating);
@@ -37,7 +37,7 @@ function Profile({ profile, onBack, onUpgrade }) {
         <header className="prof-top">
           <button className="pix-btn ghost prof-back" onClick={onBack}><Icon name="back" size={15} /><span>HOME</span></button>
           <div className="prof-title">PROFILE</div>
-          <div className="prof-spacer"></div>
+          <button className="pix-btn ghost prof-logout" onClick={onLogout}><Icon name="back" size={14} /><span>SIGN OUT</span></button>
         </header>
 
         {/* hero */}

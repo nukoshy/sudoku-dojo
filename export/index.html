@@ -210,6 +210,14 @@ function App() {
   function openTechnique(techKey) { setLessonTech(techKey); setLessonFromFail(false); setScreen('lesson'); }
   function openPaywall(reason) { setPayReason(reason || ''); setPrevScreen(screen); setScreen('paywall'); }
   function doUpgrade() { setProfile((p) => ({ ...p, premium: true })); setScreen('home'); setShowWelcome(true); }
+  // Sign out: clear the Supabase session, then reload for a clean slate
+  // (resets in-memory profile + auth listeners and returns to the welcome screen).
+  function logout() {
+    const be = window.DojoBackend || {};
+    const done = () => window.location.reload();
+    if (be.enabled && be.signOut) { Promise.resolve(be.signOut()).finally(done); }
+    else { done(); }
+  }
 
   return (
     <Stage>
@@ -226,7 +234,7 @@ function App() {
           onProfile={() => setScreen('profile')} onPuzzleRush={() => setScreen('puzzlerush')}
           onUpgrade={() => openPaywall('')} />}
       {screen === 'profile' &&
-        <Profile key="pr" profile={profile} onBack={() => setScreen('home')}
+        <Profile key="pr" profile={profile} onBack={() => setScreen('home')} onLogout={logout}
           onUpgrade={() => openPaywall('Unlock rating history and the full belt path.')} />}
       {screen === 'leaderboard' &&
         <Leaderboard key="lb" profile={profile} onBack={() => setScreen('home')}

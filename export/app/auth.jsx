@@ -19,19 +19,34 @@ function Auth({ onAuth }) {
   const [busy, setBusy] = useStateA(false);
   const [err, setErr] = useStateA('');
   const googleRef = useRefA(null);
+  const renderedRef = useRefA(false);
+  const [googleFailed, setGoogleFailed] = useStateA(false);
   const validEmail = /\S+@\S+\.\S+/.test(email);
   // Real Google sign-in needs both the client id and the Supabase backend (to
   // create a session + persist data). Until then, show the local fallback.
   const realGoogle = be.enabled && be.googleEnabled;
 
-  // Render the real Google button (Identity Services) when configured.
+  // Render the real Google button (Identity Services). The GIS script loads
+  // async, so retry until window.google is ready (up to ~6s) instead of
+  // silently rendering nothing if the effect runs first.
   useEffectA(() => {
-    if (step !== 'email' || !realGoogle || !googleRef.current) return;
-    be.renderGoogleButton(
-      googleRef.current,
-      (user) => onAuth({ provider: 'google', nick: deriveNick('', user), user }),
-      (e) => setErr((e && e.message) || 'Google sign-in failed'),
-    );
+    if (step !== 'email' || !realGoogle) return;
+    renderedRef.current = false;
+    setGoogleFailed(false);
+    let tries = 0, timer = null;
+    const attempt = () => {
+      if (renderedRef.current || !googleRef.current) return;
+      const ok = be.renderGoogleButton(
+        googleRef.current,
+        (user) => onAuth({ provider: 'google', nick: deriveNick('', user), user }),
+        (e) => setErr((e && e.message) || 'Google sign-in failed'),
+      );
+      if (ok) { renderedRef.current = true; }
+      else if (tries++ < 20) { timer = setTimeout(attempt, 300); }
+      else { setGoogleFailed(true); }
+    };
+    attempt();
+    return () => { if (timer) clearTimeout(timer); };
   }, [step]);
 
   async function submitEmail() {
@@ -82,7 +97,14 @@ function Auth({ onAuth }) {
               <div className="auth-or"><span>or</span></div>
 
               {realGoogle ? (
-                <div className="auth-google" ref={googleRef} />
+                <React.Fragment>
+                  <div className="auth-google" ref={googleRef} />
+                  {googleFailed && (
+                    <div className="auth-otp-note" style={{ textAlign: 'center' }}>
+                      Google sign-in couldn't load — use email above instead.
+                    </div>
+                  )}
+                </React.Fragment>
               ) : (
                 <button
                   className="auth-btn google"
