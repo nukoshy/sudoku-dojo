@@ -47,7 +47,8 @@ function App() {
     rating: 400, startRating: 400, ratings: makeRatings(400),
     solved: 0, streak: 0, bestStreak: 0, games: 0, perfect: 0, fastest: null,
     byLevel: makeStats(), history: [],
-    premium: false, dailyRatedUsed: 0, seenFirstSolvePrompt: false, pendingFirst: false,
+    premium: false, dailyRatedUsed: 0, dailyRatedDate: '',
+    lastPlayedDate: '', seenFirstSolvePrompt: false, pendingFirst: false,
   });
   const [puzzleKey, setPuzzleKey] = useState(0);
   const [lessonTech, setLessonTech] = useState('naked-single');
@@ -126,16 +127,20 @@ function App() {
   // Rated game: a chess-style time control (its own clock + rating).
   function startGameRated(ctrlKey) {
     const t = CONTROL_BY_KEY[ctrlKey] || TIME_CONTROLS[1];
-    const gated = !profile.premium && (profile.dailyRatedUsed || 0) >= FREE_DAILY_RATED;
+    const today = new Date().toDateString();
+    // Reset daily usage counter when the calendar date has changed.
+    const dailyUsed = profile.dailyRatedDate === today ? (profile.dailyRatedUsed || 0) : 0;
+    const gated = !profile.premium && dailyUsed >= FREE_DAILY_RATED;
     setRatedGate(gated);
     setProfile((p) => {
+      const freshDaily = p.dailyRatedDate !== today ? { dailyRatedUsed: 0, dailyRatedDate: today } : {};
       const r = (p.ratings && p.ratings[ctrlKey]) || p.rating || 400;
-      const base = { ...p, zen: false, controlKey: ctrlKey, label: t.en, homeCtrl: ctrlKey,
+      const base = { ...p, ...freshDaily, zen: false, controlKey: ctrlKey, label: t.en, homeCtrl: ctrlKey,
         empties: t.empties, hints: t.hints, timeLimit: t.limit, seed: r, rating: r };
       if (gated) return base;
       const bk = p.byLevel[ctrlKey] || { played: 0, solved: 0, noMistake: 0, bestTime: null };
-      return { ...base, games: (p.games || 0) + 1, dailyRatedUsed: (p.dailyRatedUsed || 0) + 1,
-        byLevel: { ...p.byLevel, [ctrlKey]: { ...bk, played: bk.played + 1 } } };
+      return { ...base, games: (p.games || 0) + 1, dailyRatedUsed: (freshDaily.dailyRatedUsed != null ? 0 : p.dailyRatedUsed || 0) + 1,
+        dailyRatedDate: today, byLevel: { ...p.byLevel, [ctrlKey]: { ...bk, played: bk.played + 1 } } };
     });
     setPuzzleKey((k) => k + 1);
     setScreen('game');
@@ -158,28 +163,37 @@ function App() {
         .concat(p.history || []).slice(0, 12);
       ratings[key] = res.newRating;
       const rating = Math.max(ratings.bullet, ratings.blitz, ratings.rapid);
+
+      // Day streak: playing ANY rated game today (win or loss) counts.
+      // Consecutive calendar days increment the streak; a gap resets it to 1.
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      let streak = p.streak || 0;
+      if (p.lastPlayedDate === today) {
+        // Already played today — streak unchanged.
+      } else if (p.lastPlayedDate === yesterday) {
+        streak += 1; // Consecutive day.
+      } else {
+        streak = 1; // Gap or first ever game.
+      }
+      const bestStreak = Math.max(p.bestStreak || 0, streak);
+
       if (res.failed) {
-        // Upsert leaderboard with updated (lower) rating even on loss.
-        const next = { ...p, ratings, rating, streak: 0, history };
-        (window.DojoBackend || {}).upsertLeaderboard && userId &&
-          window.DojoBackend.upsertLeaderboard(userId, { nick: next.nick || 'Deshi', rating, solved: next.solved || 0, streak: 0 });
+        const next = { ...p, ratings, rating, streak, bestStreak, lastPlayedDate: today, history };
+        window.DojoBackend?.upsertLeaderboard?.(userId, { nick: next.nick || 'Deshi', rating, solved: next.solved || 0, streak });
         return next;
       }
       const bk = p.byLevel[key] || { played: 0, solved: 0, noMistake: 0, bestTime: null };
       const byLevel = { ...p.byLevel, [key]: { ...bk, solved: bk.solved + 1,
         noMistake: bk.noMistake + (res.mistakes === 0 ? 1 : 0),
         bestTime: bk.bestTime == null ? res.time : Math.min(bk.bestTime, res.time) } };
-      const streak   = (p.streak || 0) + 1;
       const perfect  = (p.perfect || 0) + ((res.mistakes === 0 && res.hintsUsed === 0) ? 1 : 0);
       const fastest  = p.fastest == null ? res.time : Math.min(p.fastest, res.time);
       const solved   = (p.solved || 0) + 1;
-      const bestStreak = Math.max(p.bestStreak || 0, streak);
       const firstTime = !p.seenFirstSolvePrompt;
-      // Upsert real leaderboard entry after every rated game.
-      (window.DojoBackend || {}).upsertLeaderboard && userId &&
-        window.DojoBackend.upsertLeaderboard(userId, { nick: p.nick || 'Deshi', rating, solved, streak });
+      window.DojoBackend?.upsertLeaderboard?.(userId, { nick: p.nick || 'Deshi', rating, solved, streak });
       return { ...p, ratings, rating, solved, streak, bestStreak, perfect, fastest, byLevel, history,
-        seenFirstSolvePrompt: true, pendingFirst: firstTime };
+        lastPlayedDate: today, seenFirstSolvePrompt: true, pendingFirst: firstTime };
     });
   }
   function afterGameLeave(go) {

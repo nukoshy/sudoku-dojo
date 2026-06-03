@@ -72,8 +72,8 @@ function Leaderboard({ profile, onBack, onUpgrade }) {
             {rows !== null && rows.length === 0 && (
               <div className="hr-empty">
                 {error
-                  ? 'Could not load leaderboard — check your connection.'
-                  : 'No players yet — be the first to complete a rated game!'}
+                  ? 'Leaderboard not set up yet — run supabase/leaderboard.sql in your Supabase SQL editor to enable it.'
+                  : 'No players yet — complete a rated game to appear here.'}
               </div>
             )}
             {(rows || []).map((r) => {
