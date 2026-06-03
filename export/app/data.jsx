@@ -26,7 +26,7 @@ const START_ELO = 400;
 
 // Rated time controls — chess-style, each has its own rating + countdown clock.
 const TIME_CONTROLS = [
-  { key: 'bullet', en: 'Bullet', icon: 'bolt',  limit: 180, empties: 35, hints: 1,
+  { key: 'bullet', en: 'Bullet', icon: 'bullet', limit: 180, empties: 35, hints: 1,
     blurb: '3 min · tight clock, light grid.' },
   { key: 'blitz',  en: 'Blitz',  icon: 'bolt',  limit: 420, empties: 45, hints: 2,
     blurb: '7 min · balanced sprint.' },

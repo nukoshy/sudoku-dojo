@@ -384,7 +384,7 @@ html,body{margin:0;height:100%;}
   font-size:9px;letter-spacing:1px;color:var(--ink-2);margin-bottom:14px;}
 .hr-count{color:var(--ink-3);font-size:8px;}
 .hr-empty{font-family:"DotGothic16",monospace;font-size:16px;color:var(--ink-2);line-height:1.5;margin:auto 0;text-align:center;}
-.hr-list{display:flex;flex-direction:column;}
+.hr-list{display:flex;flex-direction:column;overflow-y:auto;flex:1;}
 .hr-row{display:grid;grid-template-columns:1.5fr 1fr .8fr .7fr;align-items:center;padding:11px 0;
   border-bottom:2px solid rgba(44,32,24,.12);font-family:"DotGothic16",monospace;font-size:16px;color:var(--ink);}
 .hr-row:last-child{border-bottom:none;}
@@ -858,6 +858,62 @@ html,body{margin:0;height:100%;}
 .lb-bar{margin-bottom:0;}
 
 /* ============================================================
+   TUTORIAL — interactive intro for players new to Sudoku
+   ============================================================ */
+.tut{height:100%;display:flex;align-items:center;justify-content:center;}
+.tut-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:18px;padding:36px 20px;}
+.tut-step-dots{display:flex;gap:8px;}
+.tut-dot{width:10px;height:10px;border:2px solid var(--ink);background:var(--cream-2);}
+.tut-dot.on{background:var(--red);}
+.tut-instr{font-family:"Press Start 2P",monospace;font-size:10px;letter-spacing:1px;color:var(--ink);text-align:center;line-height:1.8;max-width:500px;}
+.tut-sub{font-family:"DotGothic16",monospace;font-size:15px;color:var(--ink-2);text-align:center;max-width:460px;}
+
+/* 9×9 tutorial board */
+.tut-grid{display:grid;grid-template-columns:repeat(9,48px);grid-template-rows:repeat(9,48px);background:var(--ink);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--shadow);}
+.tut-cell{background:rgba(232,236,245,.5);display:flex;align-items:center;justify-content:center;font-family:"DotGothic16",monospace;font-size:22px;font-weight:700;color:rgba(44,32,24,.2);border-right:1px solid rgba(44,32,24,.15);border-bottom:1px solid rgba(44,32,24,.15);cursor:default;position:relative;}
+.tut-cell.tcr{border-right:3px solid var(--ink);}
+.tut-cell.tcb{border-bottom:3px solid var(--ink);}
+.tut-cell:nth-child(9n){border-right:none;}
+.tut-grid>.tut-cell:nth-last-child(-n+9){border-bottom:none;}
+.tut-house{background:var(--cream);color:var(--ink);}
+.tut-target{background:var(--cream-3);box-shadow:inset 0 0 0 3px var(--gold);cursor:pointer;}
+.tut-target.pulse{animation:tutPulse 1.1s ease infinite;}
+.tut-solved{background:var(--yellow);box-shadow:inset 0 0 0 3px var(--ink);color:var(--ink);}
+@keyframes tutPulse{0%,100%{box-shadow:inset 0 0 0 3px var(--gold);}50%{box-shadow:inset 0 0 0 4px var(--red);}}
+
+/* Tooltip bubble above target cell */
+.tut-bubble{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  background:var(--blue);color:var(--cream);font-family:"Press Start 2P",monospace;font-size:7px;
+  letter-spacing:1px;padding:7px 10px;white-space:nowrap;z-index:20;pointer-events:none;}
+.tut-bubble::after{content:'';position:absolute;top:100%;left:50%;margin-left:-6px;
+  border:6px solid transparent;border-top-color:var(--blue);}
+
+/* Rule callout shown after tapping cell */
+.tut-rule{background:var(--blue);color:var(--cream);font-family:"DotGothic16",monospace;font-size:15px;
+  padding:10px 18px;text-align:center;line-height:1.4;max-width:440px;}
+
+/* Number pad for tutorial */
+.tut-pad{display:flex;gap:8px;flex-wrap:nowrap;}
+.tut-num{width:50px;height:50px;font-family:"DotGothic16",monospace;font-size:26px;font-weight:700;
+  color:var(--ink);background:var(--cream-2);border:3px solid var(--ink);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:3px 3px 0 var(--shadow);
+  transition:transform .05s, box-shadow .05s, background .1s;}
+.tut-num:hover{background:var(--gold);}
+.tut-num:active{box-shadow:0 0 0 var(--shadow);transform:translate(3px,3px);}
+.tut-num.dim{opacity:.3;pointer-events:none;}
+.tut-num.highlight{animation:tutNumPulse .8s ease infinite;}
+@keyframes tutNumPulse{0%,100%{background:var(--cream-2);}50%{background:var(--gold);}}
+
+.tut-success{font-family:"Press Start 2P",monospace;font-size:12px;color:var(--tatami-2);letter-spacing:2px;text-align:center;}
+
+/* Lesson: upgraded full-board demo (reuses tut-grid styles) */
+.lsn-board-wrap{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.lsn-board-label{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:1px;color:var(--ink-2);}
+.lsn-tut-grid{display:grid;grid-template-columns:repeat(9,44px);grid-template-rows:repeat(9,44px);background:var(--ink);border:4px solid var(--ink);box-shadow:5px 5px 0 var(--shadow);}
+.lsn-tut-grid .tut-cell{font-size:20px;}
+.lsn-tut-grid .tut-cell.tut-target{cursor:pointer;}
+
+/* ============================================================
    MOBILE / ADAPTIVE  —  phones (<= 760px)
    The fixed 1280x800 stage is scaled-to-fit on desktop/tablet; on
    phones the JS Stage drops its transform and we reflow everything
@@ -966,4 +1022,13 @@ html,body{margin:0;height:100%;}
   .pay-first-inner{width:100%;}
   .pf-rating{font-size:38px;}
   .pf-cta{flex-wrap:wrap;}
+
+  /* tutorial */
+  .tut-inner{padding:20px 12px;gap:14px;width:100%;}
+  .tut-grid{grid-template-columns:repeat(9,36px);grid-template-rows:repeat(9,36px);}
+  .tut-cell{font-size:16px;}
+  .tut-num{width:36px;height:36px;font-size:20px;}
+  .tut-pad{gap:4px;}
+  .lsn-tut-grid{grid-template-columns:repeat(9,36px);grid-template-rows:repeat(9,36px);}
+  .lsn-tut-grid .tut-cell{font-size:16px;}
 }

@@ -1,5 +1,140 @@
-// Sudoku Dojo — onboarding screens. Welcome / Choose Path / Personalize.
-const { useState } = React;
+// Sudoku Dojo — onboarding screens. Welcome / Choose Path / Personalize / Tutorial.
+const { useState, useEffect: useEffectOnb } = React;
+
+// ---- Interactive tutorial (shown to players who have never played Sudoku) ----
+
+// Build a flat 81-cell board given a list of [row, col, value] entries.
+function makeTutBoard(entries) {
+  const board = new Array(81).fill(0);
+  entries.forEach(([r, c, v]) => { board[r * 9 + c] = v; });
+  return board;
+}
+
+// Three steps: row → column → box. Each teaches one Sudoku rule interactively.
+const TUT_STEPS = [
+  {
+    title: 'COMPLETE THE ROW',
+    rule: 'Each row must contain the numbers 1–9 exactly once.',
+    houseType: 'row', houseIdx: 4,
+    board: makeTutBoard([[4,0,8],[4,1,7],[4,2,5],[4,3,9],[4,4,6],[4,6,3],[4,7,4],[4,8,1]]),
+    targetCell: 4 * 9 + 5, answer: 2,
+  },
+  {
+    title: 'COMPLETE THE COLUMN',
+    rule: 'Each column must contain the numbers 1–9 exactly once.',
+    houseType: 'col', houseIdx: 4,
+    board: makeTutBoard([[0,4,7],[1,4,6],[3,4,8],[4,4,2],[5,4,5],[6,4,4],[7,4,1],[8,4,9]]),
+    targetCell: 2 * 9 + 4, answer: 3,
+  },
+  {
+    title: 'COMPLETE THE BOX',
+    rule: 'Each 3×3 box must contain the numbers 1–9 exactly once.',
+    houseType: 'box', houseIdx: 4,
+    board: makeTutBoard([[3,3,2],[3,4,9],[4,3,5],[4,4,7],[4,5,3],[5,3,6],[5,4,4],[5,5,8]]),
+    targetCell: 3 * 9 + 5, answer: 1,
+  },
+];
+
+function TutGrid({ step, phase, onCellTap, gridClass }) {
+  const { board, houseType, houseIdx, targetCell } = step;
+  return (
+    <div className={gridClass || 'tut-grid'}>
+      {board.map((val, i) => {
+        const r = Math.floor(i / 9), c = i % 9;
+        let inHouse = false;
+        if (houseType === 'row') inHouse = r === houseIdx;
+        if (houseType === 'col') inHouse = c === houseIdx;
+        if (houseType === 'box') {
+          const br = Math.floor(houseIdx / 3) * 3, bc = (houseIdx % 3) * 3;
+          inHouse = r >= br && r < br + 3 && c >= bc && c < bc + 3;
+        }
+        const isTarget = i === targetCell;
+        const solved = isTarget && phase === 'done';
+        const cls = ['tut-cell'];
+        if (c === 2 || c === 5) cls.push('tcr');
+        if (r === 2 || r === 5) cls.push('tcb');
+        if (inHouse && !isTarget) cls.push('tut-house');
+        if (isTarget && !solved) cls.push('tut-target', 'pulse');
+        if (solved) cls.push('tut-solved');
+        const canTap = isTarget && phase === 'cell';
+        return (
+          <div key={i} className={cls.join(' ')} onClick={() => canTap && onCellTap()}>
+            {val !== 0 ? val : solved ? step.answer : null}
+            {isTarget && phase === 'cell' && (
+              <div className="tut-bubble">Tap this cell</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Tutorial({ onDone }) {
+  const [stepIdx, setStepIdx] = useState(0);
+  const [phase, setPhase] = useState('cell'); // 'cell' | 'number' | 'done'
+  const [shake, setShake] = useState(null);
+  const step = TUT_STEPS[stepIdx];
+
+  function tapCell() {
+    setPhase('number');
+    window.DojoAudio && DojoAudio.select();
+  }
+
+  function tapNumber(n) {
+    if (n !== step.answer) {
+      setShake(n);
+      window.DojoAudio && DojoAudio.error();
+      setTimeout(() => setShake(null), 380);
+      return;
+    }
+    setPhase('done');
+    window.DojoAudio && DojoAudio.pen();
+    setTimeout(() => {
+      if (stepIdx + 1 < TUT_STEPS.length) {
+        setStepIdx(s => s + 1);
+        setPhase('cell');
+      } else {
+        onDone();
+      }
+    }, 1000);
+  }
+
+  return (
+    <div className="screen enter tut">
+      <div className="tut-inner">
+        <div className="tut-step-dots">
+          {TUT_STEPS.map((_, i) => (
+            <div key={i} className={'tut-dot' + (i === stepIdx ? ' on' : '')} />
+          ))}
+        </div>
+
+        <div className="tut-instr">{step.title}</div>
+
+        <TutGrid step={step} phase={phase} onCellTap={tapCell} />
+
+        {phase === 'number' && (
+          <div className="tut-rule">{step.rule}</div>
+        )}
+        {phase !== 'number' && (
+          <div className="tut-sub">
+            {phase === 'cell' ? 'Find the empty cell in the highlighted ' + step.houseType + ' and tap it.' : '✓ Correct!'}
+          </div>
+        )}
+
+        <div className="tut-pad">
+          {[1,2,3,4,5,6,7,8,9].map(n => (
+            <button
+              key={n}
+              className={'tut-num' + (phase !== 'number' ? ' dim' : '') + (phase === 'number' && n === step.answer ? ' highlight' : '') + (shake === n ? ' wrong' : '')}
+              onClick={() => phase === 'number' && tapNumber(n)}
+            >{n}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Welcome({ onBegin }) {
   return (
@@ -96,4 +231,4 @@ function Familiarity({ initial, onNext }) {
   );
 }
 
-Object.assign(window, { Welcome, Familiarity });
+Object.assign(window, { Welcome, Familiarity, Tutorial, TutGrid, TUT_STEPS, makeTutBoard });

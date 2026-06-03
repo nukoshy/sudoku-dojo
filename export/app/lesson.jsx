@@ -1,53 +1,90 @@
 // Sudoku Dojo — Technique lessons (teaching loop). Short + interactive:
-// the learner taps the cell the technique solves, then sees the reasoning.
+// the learner taps the cell the technique solves inside a real-board context.
 const { useState: useStateL } = React;
+
+// Place the technique's row in row 4 of a 9×9 board for real-game feel.
+function buildLessonBoard(tech) {
+  const board = new Array(81).fill(0);
+  tech.row.forEach((v, c) => { board[4 * 9 + c] = v; });
+  return board;
+}
 
 function LessonDemo({ tech }) {
   const [revealed, setRevealed] = useStateL(false);
   const [wrong, setWrong] = useStateL(null);
 
-  function tap(i) {
+  // Target cell in the full 81-cell board: row 4, column = tech.target
+  const targetCell = 4 * 9 + tech.target;
+  const board = buildLessonBoard(tech);
+
+  // Build a fake TUT_STEPS-style step so TutGrid can render it.
+  const step = {
+    board,
+    houseType: 'row',
+    houseIdx: 4,
+    targetCell,
+    answer: tech.answer,
+  };
+
+  function tapCell(flatIdx) {
     if (revealed) return;
-    if (tech.row[i] !== 0) return;            // a given — ignore
-    if (i === tech.target) {
+    const col = flatIdx % 9;
+    if (col === tech.target) {
       setRevealed(true); setWrong(null);
       window.DojoAudio && DojoAudio.pen();
     } else {
-      setWrong(i); window.DojoAudio && DojoAudio.error();
-      setTimeout(() => setWrong((w) => (w === i ? null : w)), 350);
+      setWrong(col); window.DojoAudio && DojoAudio.error();
+      setTimeout(() => setWrong(w => (w === col ? null : w)), 350);
     }
   }
 
+  // Render the board using TutGrid (exported from onboarding.jsx).
+  // Patch the board to show notes in the target cell when not revealed.
+  const boardWithNotes = board.slice();
+  // (notes displayed via overlay after the grid — see below)
+
   return (
-    <div className="lsn-demo">
-      <div className="lsn-prompt">
-        {revealed ? 'Here is the move ↓' : 'Tap the cell this technique solves'}
+    <div className="lsn-board-wrap">
+      <div className="lsn-board-label">
+        {revealed ? 'HERE IS THE MOVE' : 'FIND THE CELL THIS TECHNIQUE SOLVES'}
       </div>
-      <div className="lsn-row">
-        {tech.row.map((v, i) => {
-          const isTarget = i === tech.target;
-          const cls = ['lsn-cell'];
-          if (v !== 0) cls.push('given');
-          if (isTarget && revealed) cls.push('solved');
-          if (wrong === i) cls.push('miss');
-          if (isTarget && !revealed) cls.push('target');
+
+      {/* Full 9×9 board — technique row is row 4, rest faded */}
+      <div className="lsn-tut-grid">
+        {board.map((val, i) => {
+          const r = Math.floor(i / 9), c = i % 9;
+          const inHouse = r === 4;
+          const isTarget = i === targetCell;
+          const solved = isTarget && revealed;
+          const isMiss = wrong === c && inHouse && !isTarget;
+          const cls = ['tut-cell'];
+          if (c === 2 || c === 5) cls.push('tcr');
+          if (r === 2 || r === 5) cls.push('tcb');
+          if (inHouse && !isTarget) cls.push('tut-house');
+          if (isTarget && !solved) cls.push('tut-target', revealed ? '' : 'pulse');
+          if (solved) cls.push('tut-solved');
+          if (isMiss) cls.push('miss');
           return (
-            <div key={i} className={cls.join(' ')} onClick={() => tap(i)}>
-              {v !== 0 ? v
-                : (isTarget && revealed ? <span className="lsn-ans">{tech.answer}</span>
-                  : (tech.notes[i]
-                    ? <div className="lsn-notes">
-                        {[1,2,3,4,5,6,7,8,9].map((n) => (
-                          <span key={n} className={revealed && n === tech.answer && isTarget ? 'hot' : ''}>
-                            {tech.notes[i].includes(n) ? n : ''}
-                          </span>
-                        ))}
-                      </div>
-                    : null))}
+            <div key={i} className={cls.join(' ')} onClick={() => inHouse && !val && tapCell(i)}>
+              {val !== 0 ? val
+                : isTarget && solved ? <span className="lsn-ans">{tech.answer}</span>
+                : isTarget && tech.notes[tech.target] && !revealed
+                  ? <div className="lsn-notes">
+                      {[1,2,3,4,5,6,7,8,9].map(n => (
+                        <span key={n} className={revealed && n === tech.answer ? 'hot' : ''}>
+                          {tech.notes[tech.target].includes(n) ? n : ''}
+                        </span>
+                      ))}
+                    </div>
+                : null}
+              {isTarget && !revealed && (
+                <div className="tut-bubble">Tap this cell</div>
+              )}
             </div>
           );
         })}
       </div>
+
       {revealed ? (
         <ol className="lsn-steps">
           {tech.steps.map((s, i) => <li key={i}>{s}</li>)}

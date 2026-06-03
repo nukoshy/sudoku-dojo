@@ -122,7 +122,12 @@ function App() {
   function chooseFamiliarity(i) {
     const f = FAMILIARITY[i] || FAMILIARITY[1];
     setProfile((p) => ({ ...p, rating: f.seed, startRating: f.seed, ratings: makeRatings(f.seed) }));
-    setScreen('home');
+    // New players get an interactive tutorial before jumping into the dojo.
+    if (i === 0) {
+      setScreen('tutorial');
+    } else {
+      setScreen('home');
+    }
   }
   // Rated game: a chess-style time control (its own clock + rating).
   function startGameRated(ctrlKey) {
@@ -214,6 +219,8 @@ function App() {
         <Auth key="au" onAuth={onAuth} />}
       {screen === 'familiarity' &&
         <Familiarity key="fm" onNext={chooseFamiliarity} />}
+      {screen === 'tutorial' &&
+        <Tutorial key="tut" onDone={() => startGameZen(0)} />}
       {screen === 'home' &&
         <Home key="h" profile={profile} onPlayRated={startGameRated} onPlayZen={startGameZen}
           onProfile={() => setScreen('profile')} onPuzzleRush={() => setScreen('puzzlerush')}

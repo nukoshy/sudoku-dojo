@@ -25,6 +25,7 @@ const ICONS = {
   zen: <circle cx="12" cy="12" r="8" />,
   plus: <React.Fragment><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></React.Fragment>,
   bolt: <path d="M13 3 L6 13 H11 L10 21 L18 10 H13 Z" fill="currentColor" stroke="none" />,
+  bullet: <g fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="2" fill="none" stroke="currentColor" strokeWidth="1.5" /></g>,
   mail: <React.Fragment><rect x="3" y="6" width="18" height="12" /><polyline points="3,7 12,13 21,7" /></React.Fragment>,
   apple: <path d="M17.5 12.4 c0 -1.7 1.3 -2.5 1.4 -2.6 c-.8 -1.1 -2 -1.2 -2.4 -1.2 c-1 -.1 -2 .6 -2.5 .6 c-.5 0 -1.4 -.6 -2.3 -.6 c-1.2 0 -2.3 .7 -3 1.8 c-1.3 2.2 -.3 5.6 .9 7.4 c.6 .9 1.3 1.9 2.2 1.9 c.9 0 1.2 -.6 2.3 -.6 c1.1 0 1.4 .6 2.3 .6 c1 0 1.6 -.9 2.2 -1.8 c.5 -.7 .7 -1.4 .7 -1.4 c0 0 -1.4 -.5 -1.4 -2.1 Z M15.2 7 c.5 -.6 .8 -1.5 .7 -2.4 c-.8 0 -1.7 .5 -2.2 1.2 c-.5 .6 -.9 1.5 -.7 2.3 c.9 .1 1.7 -.5 2.2 -1.1 Z" fill="currentColor" stroke="none" />,
 };
