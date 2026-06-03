@@ -118,8 +118,7 @@ function Auth({ onAuth }) {
             <React.Fragment>
               <label className="auth-label">CHECK YOUR EMAIL</label>
               <div className="auth-otp-note">
-                We emailed a sign-in link to <b>{email}</b> — click it to enter the dojo.
-                If your email also shows a 6-digit code, you can type it here instead.
+                We emailed a 6-digit code to <b>{email}</b>. Enter it below to sign in.
               </div>
               <input
                 className="auth-input otp" type="text" inputMode="numeric" maxLength={6}
