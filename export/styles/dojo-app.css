@@ -25,6 +25,18 @@
   --paper-shadow:rgba(28,20,14,.30);
 }
 
+/* ---- Pixel scrollbars (dojo visual language, applied app-wide) ----
+   Ink thumb inset by a cream frame = a little pixel handle; track is cream-2.
+   Hover→red, drag→gold, mirroring the button states. Square edges, no radius. */
+*{scrollbar-width:thin;scrollbar-color:var(--ink) var(--cream-2);}
+::-webkit-scrollbar{width:14px;height:14px;}
+::-webkit-scrollbar-track{background:var(--cream-2);box-shadow:inset 2px 2px 0 var(--paper-shadow);}
+::-webkit-scrollbar-thumb{background:var(--ink);border:3px solid var(--cream-2);
+  background-clip:padding-box;border-radius:0;}
+::-webkit-scrollbar-thumb:hover{background:var(--red);}
+::-webkit-scrollbar-thumb:active{background:var(--gold);}
+::-webkit-scrollbar-corner{background:var(--cream-2);}
+
 /* ---- stage / scaling ---- */
 html,body{margin:0;height:100%;}
 /* #root carries the full dojo scene background so the area outside the
