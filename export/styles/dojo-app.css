@@ -251,9 +251,9 @@ html,body{margin:0;height:100%;}
 .g-cell.cb{border-bottom:4px solid var(--ink);}
 .g-cell:nth-child(9n){border-right:none;}
 .g-grid > .g-cell:nth-last-child(-n+9){border-bottom:none;}
-.g-cell.peer{background:#f6eccb;}
-.g-cell.samenum{background:#f2dd9f;}
-.g-cell.sel{background:var(--yellow);box-shadow:inset 0 0 0 4px var(--ink);z-index:1;}
+.g-cell.peer{background:#e3cd9b;}
+.g-cell.samenum{background:#ecc352;}
+.g-cell.sel{background:var(--yellow);box-shadow:inset 0 0 0 5px var(--ink),0 0 0 3px var(--red);z-index:2;}
 .g-cell.given{color:var(--ink);}
 .g-cell.user{color:var(--blue);}
 .g-cell.wrong{color:var(--red);animation:cellShake .3s ease;}
@@ -425,7 +425,7 @@ html,body{margin:0;height:100%;}
    PROFILE & STATS
    ============================================================ */
 .profile{height:100%;}
-.prof-inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:28px 56px 116px;gap:16px;}
+.prof-inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:28px 56px 132px;gap:16px;}
 .prof-top{display:flex;align-items:center;gap:20px;}
 .prof-back{font-size:10px;padding:12px 18px;background:var(--cream-2);border-color:var(--ink);box-shadow:3px 3px 0 var(--shadow);color:var(--ink);}
 .prof-back:hover{background:var(--gold);}
@@ -804,7 +804,7 @@ html,body{margin:0;height:100%;}
 .g-timer.low{color:var(--red);}
 
 /* profile ratings list (chess.com style) */
-.ratings-list{padding:8px 0;display:flex;flex-direction:column;}
+.ratings-list{padding:8px 0;display:flex;flex-direction:column;min-height:0;overflow-y:auto;}
 .rl-head{font-family:"Press Start 2P",monospace;font-size:9px;letter-spacing:1px;color:var(--ink-2);padding:14px 22px 12px;}
 .rl-item{border-top:2px solid rgba(44,32,24,.12);}
 .rl-row{display:flex;align-items:center;gap:14px;width:100%;padding:15px 22px;background:none;border:none;cursor:pointer;text-align:left;}
@@ -890,6 +890,10 @@ html,body{margin:0;height:100%;}
   letter-spacing:1px;padding:7px 10px;white-space:nowrap;z-index:20;pointer-events:none;}
 .tut-bubble::after{content:'';position:absolute;top:100%;left:50%;margin-left:-6px;
   border:6px solid transparent;border-top-color:var(--blue);}
+/* column step: point from the side so the bubble never covers a clue cell above */
+.tut-bubble.side{bottom:auto;top:50%;left:calc(100% + 12px);transform:translateY(-50%);}
+.tut-bubble.side::after{top:50%;left:auto;right:100%;margin-left:0;margin-top:-6px;
+  border-top-color:transparent;border-right-color:var(--blue);}
 
 /* Rule callout shown after tapping cell */
 .tut-rule{background:var(--blue);color:var(--cream);font-family:"DotGothic16",monospace;font-size:15px;

@@ -61,7 +61,7 @@ function TutGrid({ step, phase, onCellTap, gridClass }) {
           <div key={i} className={cls.join(' ')} onClick={() => canTap && onCellTap()}>
             {val !== 0 ? val : solved ? step.answer : null}
             {isTarget && phase === 'cell' && (
-              <div className="tut-bubble">Tap this cell</div>
+              <div className={'tut-bubble' + (houseType === 'col' ? ' side' : '')}>Tap this cell</div>
             )}
           </div>
         );
